@@ -1,0 +1,31 @@
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index dbda4499a859..40e8d6bfaea2 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -1235,6 +1235,7 @@ struct pagemapread {
+ #define PM_PFRAME_MASK		GENMASK_ULL(PM_PFRAME_BITS - 1, 0)
+ #define PM_SOFT_DIRTY		BIT_ULL(55)
+ #define PM_MMAP_EXCLUSIVE	BIT_ULL(56)
++#define PM_PAGE_REFERENCED	BIT_ULL(57)
+ #define PM_FILE			BIT_ULL(61)
+ #define PM_SWAP			BIT_ULL(62)
+ #define PM_PRESENT		BIT_ULL(63)
+@@ -1330,6 +1331,8 @@ static pagemap_entry_t pte_to_pagemap_entry(struct pagemapread *pm,
+ 		flags |= PM_MMAP_EXCLUSIVE;
+ 	if (vma->vm_flags & VM_SOFTDIRTY)
+ 		flags |= PM_SOFT_DIRTY;
++	if (pte_young(pte) || (page && (page_is_young(page) || PageReferenced(page))))
++		flags |= PM_PAGE_REFERENCED;
+ 
+ 	return make_pme(frame, flags);
+ }
+@@ -1492,7 +1495,8 @@ static const struct mm_walk_ops pagemap_ops = {
+  * Bits 5-54  swap offset if swapped
+  * Bit  55    pte is soft-dirty (see Documentation/admin-guide/mm/soft-dirty.rst)
+  * Bit  56    page exclusively mapped
+- * Bits 57-60 zero
++ * Bit  57    page is referenced
++ * Bits 58-60 zero
+  * Bit  61    page is file-page or shared-anon
+  * Bit  62    page swapped
+  * Bit  63    page present

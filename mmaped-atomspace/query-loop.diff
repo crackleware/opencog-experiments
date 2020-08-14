@@ -1,0 +1,56 @@
+diff --git a/query-loop/bio-loop.scm b/query-loop/bio-loop.scm
+index fc3f894..75029c0 100644
+--- a/query-loop/bio-loop.scm
++++ b/query-loop/bio-loop.scm
+@@ -38,6 +38,8 @@
+ (define d (Predicate "has_pubmed_ID"))
+ (define z (Predicate "has_entrez_id"))
+ 
++(system "echo loading >> marker.fifo")
++
+ (format #t "Start loading raw data ...\n")
+ (define elapsed-secs (make-timer))
+ ; (primitive-load "biogrid.scm")
+@@ -233,24 +235,26 @@
+ 	(pentagon-benchmark (map Concept paths))
+ )
+ 
++(system "echo processing >> marker.fifo")
++
+ ; Run the benchmark three times
+-(display "Will run the triangle benchmark three times ...\n")
+-(run-triangle-benchmark)
+-(sleep 1)
+-(run-triangle-benchmark)
+-(sleep 1)
++; (display "Will run the triangle benchmark three times ...\n")
+ (run-triangle-benchmark)
+-(sleep 1)
+-(display "Will run the short pentagon benchmark three times ...\n")
+-(run-short-pentagon-benchmark)
+-(sleep 1)
+-(run-short-pentagon-benchmark)
+-(sleep 1)
+-(run-short-pentagon-benchmark)
+-
+-(display "Will run the long pentagon benchmark once ...\n")
+-(display "This takes hours...")
+-(run-long-pentagon-benchmark)
++; (sleep 1)
++; (run-triangle-benchmark)
++; (sleep 1)
++; (run-triangle-benchmark)
++; (sleep 1)
++; (display "Will run the short pentagon benchmark three times ...\n")
++; (run-short-pentagon-benchmark)
++; (sleep 1)
++; (run-short-pentagon-benchmark)
++; (sleep 1)
++; (run-short-pentagon-benchmark)
++
++; (display "Will run the long pentagon benchmark once ...\n")
++; (display "This takes hours...")
++; (run-long-pentagon-benchmark)
+ 
+ (exit)
+ 
