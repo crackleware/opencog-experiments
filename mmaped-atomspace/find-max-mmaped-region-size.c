@@ -1,5 +1,5 @@
 /*
-gcc find-max-mmaped-region-size.c -o find-max-mmaped-region-size && ./find-max-mmaped-region-size | tee find-max-mmaped-region-size.out
+gcc find-max-mmaped-region-size.c -o find-max-mmaped-region-size && ./find-max-mmaped-region-size
 */
 
 #include <stdio.h>

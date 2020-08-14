@@ -1,3 +1,7 @@
+/*
+gcc sparse-mmaped-file.c -o sparse-mmaped-file && ./sparse-mmaped-file
+*/
+
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,14 +21,10 @@ int main(int argc, char** argv)
     uint8_t dummy = 1;
     pwrite(fd, &dummy, sizeof(dummy), max_size-1);
 
-    /* uint64_t patomspace_addr = 0; */
-    /* uint64_t patomspace_addr = 0x75a027e2c000; */
-    /* uint64_t patomspace_addr = 0x600000000000; */
-    uint64_t patomspace_addr = 0x100000000000;
-    uint8_t* patomspace = mmap((void*)patomspace_addr, max_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_FIXED, fd, 0);
+    uint64_t patomspace_addr = 0;
+    uint8_t* patomspace = mmap((void*)patomspace_addr, max_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     if ((int)patomspace == -1) { perror("mmap"); return 1; }
-    printf("patomspace: %p\n", patomspace);
-    printf("patomspace: @ %d GB\n", ((uint64_t)patomspace)/(1<<30));
+    printf("patomspace: %p (@ %d GB)\n", patomspace, ((uint64_t)patomspace)/(1<<30));
 
     uint64_t chunk_size = 10 * 1024*1024;
     uint64_t chunk_off = max_size - chunk_size; 
