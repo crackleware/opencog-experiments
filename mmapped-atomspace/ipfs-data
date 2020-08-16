@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/bin/env sh
 
 case "$1" in
     add) ipfs add -rQ data | tee data.cid;;

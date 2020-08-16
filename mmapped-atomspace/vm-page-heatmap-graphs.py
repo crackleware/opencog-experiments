@@ -56,6 +56,11 @@ with EventLogFile(input_filename, 'r') as evlogf:
         pr = evlogf.read()
         if not pr: break
         samples.append(pr)
+        if 0: # skip some samples for quick tests
+            for _ in range(30):
+                pr = evlogf.read()
+                if not pr: break
+                if pr.marker: samples.append(pr)
 print('len(samples):', len(samples))
 title_prefix = metadata['experiment_name'] + '\n'
 ##
@@ -156,13 +161,16 @@ for s in samples:
 tlast = s.t
 print('markers:', markers)
 ##
+def hide_edges(ax, spines):
+    for sp in spines: ax.spines[sp].set_visible(False)
+
 plt.figure(figsize=(15,10))
 for isubplt, (attr, label) in enumerate([
     ('page_dirty_cnt',          'dirty'),
     ('page_accessed_cnt',       'referenced'),
     ('page_dirty_accessed_cnt', 'dirty & referenced'),
 ]):
-    plt.subplot(3,1,isubplt+1)
+    ax = plt.subplot(3,1,isubplt+1)
     if isubplt == 0: plt.title(title_prefix)
     for stage, (sidx_start, sidx_end) in [
         ('loading',    (0, len(samples))),
@@ -176,6 +184,8 @@ for isubplt, (attr, label) in enumerate([
     if isubplt == 0: plt.text(len(psorted)*0.05, 90, 'reverse sorted by y-axis')
     if isubplt == 2: plt.xlabel('memory page')
     plt.legend()
+    hide_edges(ax, ['right', 'top'])
+    plt.margins(y=0)
 plt.tight_layout()
 savefig(plt, 'accumulated_page_counts.png')
 if INTERACTIVE: plt.show()
@@ -196,30 +206,39 @@ if INTERACTIVE: save_pickled(page_accessed, 'page_accessed.pickle')
 ##
 if INTERACTIVE: page_accessed = load_pickled('page_accessed.pickle')
 ##
+def draw_markers(markers, y):
+    for m, x in markers:
+        plt.vlines(
+            x, 0, y,
+            label=m, colors='r', linestyle='dashed')
+        plt.text(x, y, m, color='r')
+
 plt.figure(figsize=(15,10))
-plt.subplot(2,1,1)
+
+ax = plt.subplot(2,1,1)
 plt.imshow(page_accessed.transpose()/scaledown*100, origin='lower', aspect='auto', cmap=plt.get_cmap('tab20b'))
 plt.title(title_prefix+'VM page region heat map')
 plt.xlabel('time (s)')
 plt.ylabel('page region')
-xticks = [(i, '%.0f' % samples[i].t) for i in range(0, len(samples), 100)]
+xticks = [(i, '%.0f' % samples[i].t) for i in range(0, len(samples), len(samples)//20)]
 plt.xticks(*zip(*xticks))
-nmark = len(markers)
-for m, t in markers.items():
-    x = len(samples)*t/tlast
-    y = page_accessed.shape[1]
-    plt.vlines(
-        x, 0, y,
-        label=m, colors='r', linestyle='dashed')
-    plt.text(x, y, m, color='r')
-plt.colorbar(label='page region referenced (%)')
-plt.subplot(2,1,2)
+draw_markers([(m, len(samples)*t/tlast) for m, t in markers.items()], page_accessed.shape[1])
+hide_edges(ax, ['right', 'left', 'top', 'bottom'])
+plt.colorbar(label='page region referenced (%)', fraction=0.05, pad=0.02)
+
+ax = plt.subplot(2,1,2)
 MB = 1024**2
-plt.plot(*zip(*[(s.t, s.accessed_size/MB) for s in samples]), label='referenced size', linewidth=1)
-plt.plot(*zip(*[(s.t, s.dirty_size/MB) for s in samples]), label='dirty size', linewidth=1)
+plts = [
+    plt.plot(*zip(*[(s.t, s.accessed_size/MB) for s in samples]), label='referenced size', linewidth=0.7)[0],
+    plt.plot(*zip(*[(s.t, s.dirty_size/MB) for s in samples]), label='dirty size', linewidth=0.7)[0],
+]
 plt.xlabel('time (s)')
 plt.ylabel('(MB)')
-plt.legend()
+draw_markers(markers.items(), y=0.95*max(max(s.accessed_size, s.dirty_size) for s in samples)/MB)
+plt.legend(plts, [p.get_label() for p in plts])
+plt.margins(0)
+hide_edges(ax, ['right', 'top'])
+
 plt.tight_layout()
 savefig(plt, 'page_region_referenced__sample_period.png')
 if INTERACTIVE: plt.show()
