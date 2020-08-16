@@ -107,7 +107,8 @@ for s in iter_samples(progress=True):
     for r in s.regions:
         if r.pagemap_data is not None:
             cr, (offset_start, offset_end) = \
-                get_cons_region_for_addr_range(s.cons_regions.values(), r.from_addr, r.to_addr)
+                get_cons_region_for_addr_range(
+                    s.cons_regions.values(), r.from_addr, r.to_addr)
             indices = np.arange(offset_start//page_size, offset_end//page_size)
             cr.page_flags[indices] = r.pagemap_data
 #
@@ -136,7 +137,8 @@ class AccumulatePageCounts:
                     acr = acc_cr_by_addr[cr.key]
                     acr.page_dirty_cnt += is_dirty(cr.page_flags)
                     acr.page_accessed_cnt += is_accessed(cr.page_flags)
-                    acr.page_dirty_accessed_cnt += is_dirty(cr.page_flags) | is_accessed(cr.page_flags)
+                    acr.page_dirty_accessed_cnt += \
+                        is_dirty(cr.page_flags) | is_accessed(cr.page_flags)
 
         page_dirty_cnt = np.zeros(nknown_pages, dtype='uint32')
         page_accessed_cnt = np.zeros(nknown_pages, dtype='uint32')
@@ -213,24 +215,45 @@ def draw_markers(markers, y):
             label=m, colors='r', linestyle='dashed')
         plt.text(x, y, m, color='r')
 
+cmap = plt.get_cmap('tab20b')
+# black is 0%
+def color_component(component_idx):
+    return [(0.0,  0.0, 0.0)]+[(
+        i/(len(cmap.colors)),
+        cmap.colors[i-1][component_idx] if i > 0 else 0.0,
+        cmap.colors[i][component_idx] if i < len(cmap.colors) else 1.0,
+    ) for i in range(len(cmap.colors)+1)]
+mycmap = matplotlib.colors.LinearSegmentedColormap('mycmap',
+        {'red':   color_component(0),
+         'green': color_component(1),
+         'blue':  color_component(2)})
+
 plt.figure(figsize=(15,10))
 
 ax = plt.subplot(2,1,1)
-plt.imshow(page_accessed.transpose()/scaledown*100, origin='lower', aspect='auto', cmap=plt.get_cmap('tab20b'))
+plt.imshow(
+    page_accessed.transpose()/scaledown*100,
+    origin='lower', aspect='auto', cmap=mycmap)
 plt.title(title_prefix+'VM page region heat map')
 plt.xlabel('time (s)')
 plt.ylabel('page region')
-xticks = [(i, '%.0f' % samples[i].t) for i in range(0, len(samples), len(samples)//20)]
+xticks = [(i, '%.0f' % samples[i].t)
+          for i in range(0, len(samples), len(samples)//10)]
 plt.xticks(*zip(*xticks))
-draw_markers([(m, len(samples)*t/tlast) for m, t in markers.items()], page_accessed.shape[1])
+draw_markers([(m, len(samples)*t/tlast)
+              for m, t in markers.items()], page_accessed.shape[1])
 hide_edges(ax, ['right', 'left', 'top', 'bottom'])
 plt.colorbar(label='page region referenced (%)', fraction=0.05, pad=0.02)
 
 ax = plt.subplot(2,1,2)
 MB = 1024**2
 plts = [
-    plt.plot(*zip(*[(s.t, s.accessed_size/MB) for s in samples]), label='referenced size', linewidth=0.7)[0],
-    plt.plot(*zip(*[(s.t, s.dirty_size/MB) for s in samples]), label='dirty size', linewidth=0.7)[0],
+    plt.plot(
+        *zip(*[(s.t, s.accessed_size/MB) for s in samples]),
+        label='referenced size', linewidth=0.7)[0],
+    plt.plot(
+        *zip(*[(s.t, s.dirty_size/MB) for s in samples]),
+        label='dirty size', linewidth=0.7)[0],
 ]
 plt.xlabel('time (s)')
 plt.ylabel('(MB)')
