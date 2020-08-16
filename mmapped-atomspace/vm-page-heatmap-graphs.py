@@ -30,7 +30,7 @@ def load_pickled(filename):
 
 def savefig(plt, filename):
     print('saving', filename)
-    plt.savefig(filename)
+    plt.savefig(filename, dpi=200)
 
 class PeriodicReport: pass
 class Region: pass
@@ -166,7 +166,7 @@ for isubplt, (attr, label) in enumerate([
     if isubplt == 0: plt.title(title_prefix)
     for stage, (sidx_start, sidx_end) in [
         ('loading',    (0, len(samples))),
-        ('processing', (int(len(samples)*markers['processing']/tlast), len(samples))),
+        ('processing', (int(len(samples)*markers['triangle-benchmark']/tlast), len(samples))),
     ]:
         apc = AccumulatePageCounts(sidx_start, sidx_end)
         arr = getattr(apc, attr)
@@ -198,9 +198,9 @@ if INTERACTIVE: page_accessed = load_pickled('page_accessed.pickle')
 ##
 plt.figure(figsize=(15,10))
 plt.subplot(2,1,1)
-plt.imshow(page_accessed.transpose()/scaledown*100, origin='lower', aspect='auto')
+plt.imshow(page_accessed.transpose()/scaledown*100, origin='lower', aspect='auto', cmap=plt.get_cmap('tab20b'))
 plt.title(title_prefix+'VM page region heat map')
-plt.xlabel('sample period (s)')
+plt.xlabel('time (s)')
 plt.ylabel('page region')
 xticks = [(i, '%.0f' % samples[i].t) for i in range(0, len(samples), 100)]
 plt.xticks(*zip(*xticks))
@@ -217,7 +217,7 @@ plt.subplot(2,1,2)
 MB = 1024**2
 plt.plot(*zip(*[(s.t, s.accessed_size/MB) for s in samples]), label='referenced size', linewidth=1)
 plt.plot(*zip(*[(s.t, s.dirty_size/MB) for s in samples]), label='dirty size', linewidth=1)
-plt.xlabel('sample period (s)')
+plt.xlabel('time (s)')
 plt.ylabel('(MB)')
 plt.legend()
 plt.tight_layout()

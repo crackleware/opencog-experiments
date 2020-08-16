@@ -29,13 +29,11 @@ pagemap data.
     period: 0.1
     cmd: ['guile', '-l', 'bio-loop.scm']
     page_size: 4096
-    pid: 7338
-    pagemap: @ 0.0s Tr:0.004s S:22M D:8M A:4M smD:1M smA:5M
-    pagemap: @ 0.1s Tr:0.013s S:30M D:15M A:8M smD:3M smA:7M
-    pagemap: @ 0.2s Tr:0.015s S:42M D:9M A:10M smD:6M smA:9M
+    pid: 1405
+    pagemap: @ 0.0s Tr:0.008s S:22M D:20M A:6M smD:1M smA:6M
+    pagemap: @ 0.1s Tr:0.009s S:30M D:14M A:7M smD:3M smA:7M
     ...
-    Triangle relations for 681 genes in 109.31 seconds
-    VM page flags capture completed.
+
 
 If you don't want to patch and compile Linux kernel you can download already
 captured test data:
@@ -87,3 +85,9 @@ of mmaped region on 64-bit Linux 4.19 system:
     $ ./find-max-mmaped-region-size
     max_mmap_size: 9.47201e+13 bytes (86.147 TB)
 
+### Additional notes ###
+
+Information what memory pages are not in RAM is also accessible through
+`/proc/PID/pagemap` file. The system runtime can consult these flags to schedule
+execution more optimally and avoid latency that may come from accessing paged
+out memory.

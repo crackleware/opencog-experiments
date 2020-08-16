@@ -1,33 +1,46 @@
 diff --git a/query-loop/bio-loop.scm b/query-loop/bio-loop.scm
-index fc3f894..75029c0 100644
+index fc3f894..1711494 100644
 --- a/query-loop/bio-loop.scm
 +++ b/query-loop/bio-loop.scm
-@@ -38,6 +38,8 @@
+@@ -17,6 +17,10 @@
+ 			(set! start-time now)
+ 			diff)))
+ 
++(define (vm-heatmap-marker marker)
++    (call-with-output-file "marker.fifo"       
++        (lambda (port) (format port "~A\n" marker))))
++    
+ ; List of genes on which to perform the query.
+ (load "gene-list.scm")
+ 
+@@ -38,6 +42,8 @@
  (define d (Predicate "has_pubmed_ID"))
  (define z (Predicate "has_entrez_id"))
  
-+(system "echo loading >> marker.fifo")
++(vm-heatmap-marker 'loading)
 +
  (format #t "Start loading raw data ...\n")
  (define elapsed-secs (make-timer))
  ; (primitive-load "biogrid.scm")
-@@ -233,24 +235,26 @@
- 	(pentagon-benchmark (map Concept paths))
- )
+@@ -235,22 +241,24 @@
  
-+(system "echo processing >> marker.fifo")
-+
  ; Run the benchmark three times
--(display "Will run the triangle benchmark three times ...\n")
--(run-triangle-benchmark)
--(sleep 1)
--(run-triangle-benchmark)
--(sleep 1)
-+; (display "Will run the triangle benchmark three times ...\n")
+ (display "Will run the triangle benchmark three times ...\n")
++(vm-heatmap-marker 'triangle-benchmark)
  (run-triangle-benchmark)
 -(sleep 1)
--(display "Will run the short pentagon benchmark three times ...\n")
--(run-short-pentagon-benchmark)
+-(run-triangle-benchmark)
+-(sleep 1)
+-(run-triangle-benchmark)
+-(sleep 1)
++; (sleep 1)
++; (run-triangle-benchmark)
++; (sleep 1)
++; (run-triangle-benchmark)
++; (sleep 1)
+ (display "Will run the short pentagon benchmark three times ...\n")
++(vm-heatmap-marker 'short-pentagon-benchmark)
+ (run-short-pentagon-benchmark)
 -(sleep 1)
 -(run-short-pentagon-benchmark)
 -(sleep 1)
@@ -36,13 +49,6 @@ index fc3f894..75029c0 100644
 -(display "Will run the long pentagon benchmark once ...\n")
 -(display "This takes hours...")
 -(run-long-pentagon-benchmark)
-+; (sleep 1)
-+; (run-triangle-benchmark)
-+; (sleep 1)
-+; (run-triangle-benchmark)
-+; (sleep 1)
-+; (display "Will run the short pentagon benchmark three times ...\n")
-+; (run-short-pentagon-benchmark)
 +; (sleep 1)
 +; (run-short-pentagon-benchmark)
 +; (sleep 1)
